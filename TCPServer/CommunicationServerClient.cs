@@ -38,7 +38,7 @@ namespace TCPServer
             }
             if (SyncSocketThread != null)
             {
-                SyncSocketThread.Abort();
+                SyncSocketThread.Interrupt();
             }
         }
 
