@@ -3,6 +3,7 @@ namespace TCPServer
     public partial class Form1 : Form
     {
         private CommunicationServer Server;
+        private CommunicationServerClient Client;
 
         public Form1()
         {
@@ -20,6 +21,7 @@ namespace TCPServer
             {
                 Server.OnServerExitCallback = OnServerExit;
                 Server.OnRequestRecievedCallback = OnRequestReceived;
+                Client = new CommunicationServerClient();
             }
         }
 
@@ -30,6 +32,7 @@ namespace TCPServer
 
         private void OnServerExit()
         {
+            MessageBox.Show(@"Сервер остановлен", @"Уведомление", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private bool OnRequestReceived(int ClientGUID, byte[] Request, out byte[] Reply)
