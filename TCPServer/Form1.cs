@@ -32,7 +32,7 @@ namespace TCPServer
 
         private void OnServerExit()
         {
-            MessageBox.Show(@"Сервер остановлен", @"Уведомление", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            //MessageBox.Show(@"Сервер остановлен", @"Уведомление", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private bool OnRequestReceived(int ClientGUID, byte[] Request, out byte[] Reply)

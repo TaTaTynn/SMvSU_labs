@@ -17,6 +17,7 @@ namespace TCPServer
     {
         private int ListenSocketPort;
         private Socket IncomingConnectionSocket;
+        private Socket TimeSenderSocket;
         private Thread IncomingConnectionThread;
         private CommunicationServerClient[] CommunicationClients;
 
@@ -80,6 +81,7 @@ namespace TCPServer
         private void IncomingConnectionThreadProc()
         {
             IncomingConnectionSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            TimeSenderSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             if (IncomingConnectionSocket == null)
             {
                 Trace.TraceError("Не удалось создать IncomingConnectionSocket");
@@ -90,6 +92,7 @@ namespace TCPServer
             {
                 IPEndPoint ep = new IPEndPoint(IPAddress.Any, ListenSocketPort);
                 IncomingConnectionSocket.Bind(ep);
+                TimeSenderSocket.Bind(ep);
             }
             catch (Exception ex)
             {
@@ -101,6 +104,7 @@ namespace TCPServer
             try
             {
                 IncomingConnectionSocket.Listen(5);
+                TimeSenderSocket.Listen(5);
             }
             catch (Exception ex)
             {
@@ -112,10 +116,12 @@ namespace TCPServer
             while (true)
             {
                 Socket newConnectionSocket = null;
+                Socket newTimeSenderSocket = null;
                 try
                 {
                     Trace.TraceInformation(@"Ожидаем входящего подключения");
                     newConnectionSocket = IncomingConnectionSocket.Accept();
+                    newTimeSenderSocket = TimeSenderSocket.Accept();
                 }
                 catch (Exception ex)
                 {
@@ -126,23 +132,23 @@ namespace TCPServer
                 }
                 if (newConnectionSocket != null)
                 {
-                    OnClientConnected(newConnectionSocket);
+                    OnClientConnected(newConnectionSocket, newTimeSenderSocket);
                 }
             }
         }
 
-        private void OnClientConnected(Socket ClientSocket)
+        private void OnClientConnected(Socket SyncClientSocket, Socket AsyncClientSocket)
         {
             int ClientGUID = GetGUIDForClient();
             if (ClientGUID == -1)
             {
-                CommunicationClients[0].FinishConnect(ClientSocket, ClientGUID);
+                CommunicationClients[0].FinishConnect(SyncClientSocket, AsyncClientSocket, ClientGUID);
                 CommunicationClients[0].Disconnect();
             }
             CommunicationServerClient client = CommunicationClients[ClientGUID];
             if (client == null)
                 return;
-            int result = client.FinishConnect(ClientSocket, ClientGUID);
+            int result = client.FinishConnect(SyncClientSocket, AsyncClientSocket, ClientGUID);
             if (result == 0)
             {
                 client.OnSyncRequestReceived = OnRequestRecieved;

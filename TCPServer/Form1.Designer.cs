@@ -34,7 +34,7 @@
             // 
             // buttonStartServer
             // 
-            this.buttonStartServer.Location = new System.Drawing.Point(361, 12);
+            this.buttonStartServer.Location = new System.Drawing.Point(107, 16);
             this.buttonStartServer.Name = "buttonStartServer";
             this.buttonStartServer.Size = new System.Drawing.Size(104, 23);
             this.buttonStartServer.TabIndex = 0;
@@ -44,7 +44,7 @@
             // 
             // buttonStopServer
             // 
-            this.buttonStopServer.Location = new System.Drawing.Point(361, 41);
+            this.buttonStopServer.Location = new System.Drawing.Point(107, 45);
             this.buttonStopServer.Name = "buttonStopServer";
             this.buttonStopServer.Size = new System.Drawing.Size(104, 23);
             this.buttonStopServer.TabIndex = 1;
@@ -56,11 +56,11 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(477, 228);
+            this.ClientSize = new System.Drawing.Size(319, 80);
             this.Controls.Add(this.buttonStopServer);
             this.Controls.Add(this.buttonStartServer);
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "TCP/IP Server";
             this.ResumeLayout(false);
 
         }

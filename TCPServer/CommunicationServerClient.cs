@@ -9,10 +9,10 @@ using System.Timers;
 
 namespace TCPServer
 {
-
     internal class CommunicationServerClient
     {
         private Socket SyncSocket;
+        private Socket AsyncSocket;
         private Thread SyncSocketThread;
         private Thread AsyncSocketThread;
         private int _ClientGUID = 0;
@@ -43,6 +43,16 @@ namespace TCPServer
             {
                 SyncSocketThread.Interrupt();
             }
+            if (AsyncSocket != null)
+            {
+                AsyncSocket.Close();
+            }
+            if (AsyncSocketThread != null)
+            {
+                timerCount.Elapsed -= SendTimeToClient;
+                timerCount.Stop();
+                AsyncSocketThread.Interrupt();
+            }
         }
 
         private void OnClientExit()
@@ -52,14 +62,16 @@ namespace TCPServer
             Disconnect();
         }
 
-        public int FinishConnect(Socket ClientSocket, int ConnectionGUID)
+        public int FinishConnect(Socket SyncClientSocket, Socket AsyncClientSocket, int ConnectionGUID)
         {
-            SyncSocket = ClientSocket;
+            SyncSocket = SyncClientSocket;
+            AsyncSocket = AsyncClientSocket;
             _ClientGUID = ConnectionGUID;
             //Отправляем идентификатор соединения
             try
             {
-                int BytesSend = SyncSocket.Send(BitConverter.GetBytes(_ClientGUID));
+                int BytesSendSync = SyncSocket.Send(BitConverter.GetBytes(_ClientGUID));
+                int BytesSendAsync = AsyncSocket.Send(BitConverter.GetBytes(_ClientGUID));
             }
             catch (Exception ex)
             {
@@ -75,77 +87,48 @@ namespace TCPServer
             SyncSocketThread.Start();
 
             //Создаем поток асинхронного канала
-            //AsyncSocketThread = new Thread(new ThreadStart());
-            timerCount = new System.Timers.Timer(60000); // Установка таймера на 1 минуту
-            timerCount.Elapsed += AsyncSocketThreadProc;
-            timerCount.AutoReset = true;
-            timerCount.Enabled = true;
+            AsyncSocketThread = new Thread(new ThreadStart(AsyncSocketThreadProc));
+            AsyncSocketThread.Start();
+
             return 0;
         }
 
-        private void AsyncSocketThreadProc(Object source, ElapsedEventArgs e) ///////////////////////////////////////////////
+        private void AsyncSocketThreadProc() ///////////////////////////////////////////////
         {
-            //Отправляем нотификацию, что сервер готов
-            try
+            timerCount = new System.Timers.Timer(2000);
+            timerCount.Elapsed += SendTimeToClient;
+            while (true)
             {
-                int BytesSend = SyncSocket.Send(BitConverter.GetBytes(_ClientGUID));
+                if (!timerCount.Enabled && timerCount!=null)
+                {
+                    timerCount.Enabled = true;
+                }
             }
-            catch (Exception ex)
-            {
-                Trace.TraceError(@"Не получилось отправить нотификацию, что сервер готов");
-                Trace.TraceError(ex.ToString());
-                OnClientExit();
-                return;
-            }
+        }
+
+        private void SendTimeToClient(Object source, ElapsedEventArgs e)
+        {
             byte[] SendBuffer = new byte[8192];
-                int BytesReceived = 0;
-                //Проверим, произошел ли дисконнект
+            byte[] Reply = null;
+            byte[] time = Encoding.UTF8.GetBytes(e.SignalTime.ToString());
+            //Array.Copy(time, Request, BytesReceived);
+            bool bReply = OnSyncRequestReceived(_ClientGUID, time, out Reply);
+            if ((bReply == true) && (Reply != null))
+            {
+                //Отправляем время клиенту
                 try
                 {
-                    BytesReceived = SyncSocket.Receive(SendBuffer, 8192, SocketFlags.None);
+                    int BytesSend = AsyncSocket.Send(Reply);
                 }
                 catch (Exception ex)
                 {
-                    Trace.TraceError(@"Ошибка при получении данных по синхронному каналу");
+                    Trace.TraceError(@"Не получилось отправить клиенту время");
                     Trace.TraceError(ex.ToString());
                     OnClientExit();
                     return;
                 }
-                //Если дисконнект, отключаем клиента
-                if (BytesReceived <= 0)
-                {
-                    OnClientExit();
-                    return;
-                }
-                if ((BytesReceived > 0) && (OnSyncRequestReceived != null))
-                {
-                    byte[] Reply = null;
-                    byte[] Request = new byte[BytesReceived];
-                    Array.Copy(RecieveBuffer, Request, BytesReceived);
-                    bool bReply = OnSyncRequestReceived(_ClientGUID, Request, out Reply);
-                    if ((bReply == true) && (Reply != null))
-                    {
-                        //Отправляем ответ
-                        try
-                        {
-                            int BytesSend = SyncSocket.Send(Reply);
-                        }
-                        catch (Exception ex)
-                        {
-                            Trace.TraceError(@"Не получилось отправить ответ на синхронный запрос");
-                            Trace.TraceError(ex.ToString());
-                            OnClientExit();
-                            return;
-                        }
-                    }
-                }
-            
-        }
-
-        private static void SendTimeToClient(Object source, ElapsedEventArgs e)
-        {
-            Console.WriteLine("The Elapsed event was raised at {0:HH:mm:ss.fff}",
-                              e.SignalTime);
+                //MessageBox.Show(e.SignalTime.ToString(), @"Но клиенту не попало", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void SyncSocketThreadProc()
@@ -209,7 +192,5 @@ namespace TCPServer
                 }
             }
         }
-
-
     }
 }
