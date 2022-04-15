@@ -13,6 +13,7 @@ namespace TCPClient
     public class CommunicationClient
     {
         private Socket SyncSocket;
+        private Socket AsyncSocket;
         private string ServerName;
         private int SyncPort;
         private int ClientGUID;
@@ -97,9 +98,103 @@ namespace TCPClient
                 Trace.TraceError(ex.ToString());
                 return -1;
             }
+            ////////////////////////////////////////////////////////////////////////
+            byte[] bAsyncsPort = new byte[5];
+            try
+            {
+                BytesReceived = SyncSocket.Receive(bAsyncsPort, 5, SocketFlags.None);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(@"Не удалось получить подтверждение готовности сервера");
+                Trace.TraceError(ex.ToString());
+                return -1;
+            }
+            int AsyncPortNo = BitConverter.ToInt32(bAsyncsPort, 0);
+            this.ConnectAsync(HostName, AsyncPortNo);
+            ////////////////////////////////////////////////////////////////////////
             //Создаем мьютекс для синхронного канала
             SendSyncMutex = new Mutex();
             return ClientGUID;
+        }
+
+        public int ConnectAsync(string HostName, int Port)
+        {
+            ServerName = HostName;
+            SyncPort = Port;
+            //Соединяем асинхронный канал
+            try
+            {
+                AsyncSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(@"Не получилось создать асинхронный сокет");
+                Trace.TraceError(ex.ToString());
+                return -1;
+            }
+            if (SyncSocket == null)
+            {
+                Trace.TraceError("Не удалось создать AsyncSocket");
+                return -1;
+            }
+            //Пытаемся сконнектиться
+            try
+            {
+                AsyncSocket.Connect(HostName, Port);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(@"Не удалось выполнить Connect() для AsyncSocket");
+                Trace.TraceError(ex.ToString());
+                return -1;
+            }
+            if (SyncSocket.Connected == false)
+            {
+                Trace.TraceError("Не удалось выполнить Connect() для AsyncSocket");
+                return -1;
+            }
+            //Получаем идентификатор клиента для этого соединения
+            /*byte[] bClientGUID = new byte[4];
+            int BytesReceived = 0;
+            try
+            {
+                BytesReceived = SyncSocket.Receive(bClientGUID, 4, SocketFlags.None);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(@"Не удалось получить ClientGUID");
+                Trace.TraceError(ex.ToString());
+                return -1;
+            }
+            if (BytesReceived != 4)
+            {
+                Trace.TraceError("Не удалось получить ClientGUID");
+                return -1;
+            }
+            ClientGUID = BitConverter.ToInt32(bClientGUID, 0);
+            //Подключение отвергнуто
+            if (ClientGUID == -1)
+            {
+                Trace.TraceInformation("Подключение отвергнуто сервером");
+                return ClientGUID;
+            }
+            //Ожидаем подтверждения, что сервер готов
+            byte[] bNotification = new byte[1024];
+            try
+            {
+                BytesReceived = SyncSocket.Receive(bNotification, 1024, SocketFlags.None);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(@"Не удалось получить подтверждение готовности сервера");
+                Trace.TraceError(ex.ToString());
+                return -1;
+            }
+            //Создаем мьютекс для синхронного канала
+            SendSyncMutex = new Mutex();
+            return ClientGUID;*/
+            return 0;
         }
 
         public void Disconnect()

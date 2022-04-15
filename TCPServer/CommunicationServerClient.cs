@@ -8,7 +8,6 @@ using System.Threading;
 
 namespace TCPServer
 {
-
     internal class CommunicationServerClient
     {
         private Socket SyncSocket;
