@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Net.Sockets;
 using System.Threading;
+using System.Timers;
 
 namespace TCPServer
 {
@@ -13,6 +14,8 @@ namespace TCPServer
         private Socket SyncSocket;
         private Thread SyncSocketThread;
         private int _ClientGUID = 0;
+        private int _asyncSocket = 22225;
+        private System.Timers.Timer asyncTimer;
         public int ClientGuid
         {
             get { return _ClientGUID; }
@@ -82,6 +85,18 @@ namespace TCPServer
             catch (Exception ex)
             {
                 Trace.TraceError(@"Не получилось отправить нотификацию, что сервер готов");
+                Trace.TraceError(ex.ToString());
+                OnClientExit();
+                return;
+            }
+            //Отправляем адрес асинхронного сокета
+            try
+            {
+                int BytesSend = SyncSocket.Send(BitConverter.GetBytes(_asyncSocket));
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(@"Не получилось отправить адрес асинхронного сокета");
                 Trace.TraceError(ex.ToString());
                 OnClientExit();
                 return;
