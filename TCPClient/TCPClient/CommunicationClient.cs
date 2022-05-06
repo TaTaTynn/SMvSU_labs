@@ -9,6 +9,7 @@ using System.Diagnostics;
 namespace TCPClient
 {
     public delegate void ClientDisconnectedDelegate();
+    public delegate void TimeReceivedDelegate();
 
     public class CommunicationClient
     {
@@ -16,9 +17,13 @@ namespace TCPClient
         private Socket AsyncSocket;
         private string ServerName;
         private int SyncPort;
+        private int AsyncPort;
+        private Thread AsyncSocketThread;
+        private string sTime;
         private int ClientGUID;
         private Mutex SendSyncMutex;
         public ClientDisconnectedDelegate OnClientDisconnected;
+        public TimeReceivedDelegate AsyncTimeReceived;
 
         public CommunicationClient()
         {
@@ -86,6 +91,20 @@ namespace TCPClient
                 Trace.TraceInformation("Подключение отвергнуто сервером");
                 return ClientGUID;
             }
+            ////////////////////////////////////////////////////////////////////////
+            byte[] bAsyncsPort = new byte[5];
+            try
+            {
+                BytesReceived = SyncSocket.Receive(bAsyncsPort, 5, SocketFlags.None);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(@"Не удалось получить номер асинхронного порта");
+                Trace.TraceError(ex.ToString());
+                return -1;
+            }
+            int AsyncPortNo = BitConverter.ToInt32(bAsyncsPort, 0);
+            ////////////////////////////////////////////////////////////////////////
             //Ожидаем подтверждения, что сервер готов
             byte[] bNotification = new byte[1024];
             try
@@ -98,21 +117,7 @@ namespace TCPClient
                 Trace.TraceError(ex.ToString());
                 return -1;
             }
-            ////////////////////////////////////////////////////////////////////////
-            byte[] bAsyncsPort = new byte[5];
-            try
-            {
-                BytesReceived = SyncSocket.Receive(bAsyncsPort, 5, SocketFlags.None);
-            }
-            catch (Exception ex)
-            {
-                Trace.TraceError(@"Не удалось получить подтверждение готовности сервера");
-                Trace.TraceError(ex.ToString());
-                return -1;
-            }
-            int AsyncPortNo = BitConverter.ToInt32(bAsyncsPort, 0);
             this.ConnectAsync(HostName, AsyncPortNo);
-            ////////////////////////////////////////////////////////////////////////
             //Создаем мьютекс для синхронного канала
             SendSyncMutex = new Mutex();
             return ClientGUID;
@@ -121,7 +126,7 @@ namespace TCPClient
         public int ConnectAsync(string HostName, int Port)
         {
             ServerName = HostName;
-            SyncPort = Port;
+            AsyncPort = Port;
             //Соединяем асинхронный канал
             try
             {
@@ -133,7 +138,7 @@ namespace TCPClient
                 Trace.TraceError(ex.ToString());
                 return -1;
             }
-            if (SyncSocket == null)
+            if (AsyncSocket == null)
             {
                 Trace.TraceError("Не удалось создать AsyncSocket");
                 return -1;
@@ -149,17 +154,17 @@ namespace TCPClient
                 Trace.TraceError(ex.ToString());
                 return -1;
             }
-            if (SyncSocket.Connected == false)
+            if (AsyncSocket.Connected == false)
             {
                 Trace.TraceError("Не удалось выполнить Connect() для AsyncSocket");
                 return -1;
             }
             //Получаем идентификатор клиента для этого соединения
-            /*byte[] bClientGUID = new byte[4];
+            byte[] bClientGUID = new byte[4];
             int BytesReceived = 0;
             try
             {
-                BytesReceived = SyncSocket.Receive(bClientGUID, 4, SocketFlags.None);
+                BytesReceived = AsyncSocket.Receive(bClientGUID, 4, SocketFlags.None);
             }
             catch (Exception ex)
             {
@@ -179,11 +184,24 @@ namespace TCPClient
                 Trace.TraceInformation("Подключение отвергнуто сервером");
                 return ClientGUID;
             }
+            ////////////////////////////////////////////////////////////////////////
+            byte[] bAsyncsPort = new byte[5];
+            try
+            {
+                BytesReceived = AsyncSocket.Receive(bAsyncsPort, 5, SocketFlags.None);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(@"Не удалось получить номер асинхронного порта (который уже не нужен, но все равно отправляется)");
+                Trace.TraceError(ex.ToString());
+                return -1;
+            }
+            ////////////////////////////////////////////////////////////////////////
             //Ожидаем подтверждения, что сервер готов
             byte[] bNotification = new byte[1024];
             try
             {
-                BytesReceived = SyncSocket.Receive(bNotification, 1024, SocketFlags.None);
+                BytesReceived = AsyncSocket.Receive(bNotification, 1024, SocketFlags.None);
             }
             catch (Exception ex)
             {
@@ -191,10 +209,52 @@ namespace TCPClient
                 Trace.TraceError(ex.ToString());
                 return -1;
             }
-            //Создаем мьютекс для синхронного канала
-            SendSyncMutex = new Mutex();
-            return ClientGUID;*/
+            //Запускаем поток, ожидающий от сервера время
+            if (AsyncSocketThread == null)
+            {
+                AsyncSocketThread = new Thread(new ThreadStart(AsyncSocketThreadProc));
+                AsyncSocketThread.Start();
+            }
             return 0;
+        }
+
+        private void AsyncSocketThreadProc()
+        {                                                                               //////////////////////////////////////////////
+            byte[] RecieveBuffer = new byte[8192];
+            while (true)
+            {
+                int BytesReceived = 0;
+                //Ждем
+                try
+                {
+                    BytesReceived = AsyncSocket.Receive(RecieveBuffer, 8192, SocketFlags.None);
+                }
+                catch (Exception ex)
+                {
+                    Trace.TraceError(@"Ошибка при получении данных по асинхронному каналу");
+                    Trace.TraceError(ex.ToString());
+                    OnClientExit();
+                    return;
+                }
+                //Это, как ни странно, свидетельствует о дисконнекте
+                if (BytesReceived <= 0)
+                {
+                    OnClientExit();
+                    return;
+                }
+                if ((BytesReceived > 0) && (AsyncTimeReceived != null))
+                {
+                    byte[] bTime = new byte[BytesReceived];
+                    Array.Copy(RecieveBuffer, bTime, BytesReceived);
+                    sTime = Encoding.UTF8.GetString(bTime);
+                    AsyncTimeReceived();
+                }
+            }
+        }
+
+        public string getTime()
+        {
+            return sTime;
         }
 
         public void Disconnect()
@@ -202,6 +262,10 @@ namespace TCPClient
             if ((SyncSocket != null) && (SyncSocket.Connected == true))
             {
                 SyncSocket.Close();
+            }
+            if ((AsyncSocket != null) && (AsyncSocket.Connected == true))
+            {
+                AsyncSocket.Close();
             }
         }
 

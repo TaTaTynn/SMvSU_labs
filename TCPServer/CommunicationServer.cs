@@ -7,6 +7,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
+
 
 namespace TCPServer
 {
@@ -16,9 +18,13 @@ namespace TCPServer
     internal class CommunicationServer
     {
         private int ListenSocketPort;
+        private int AsyncSocketPort;
         private Socket IncomingConnectionSocket;
         private Thread IncomingConnectionThread;
+        private Thread IncomingAsyncConnectionThread;
         private CommunicationServerClient[] CommunicationClients;
+        private static System.Timers.Timer timerCount;
+
 
         public ServerExitDelegate OnServerExitCallback;
         public RequestReceivedDelegate OnRequestRecievedCallback;
@@ -28,6 +34,9 @@ namespace TCPServer
             OnServerExitCallback = null;
             OnRequestRecievedCallback = null;
             OnClientDisconnectedCallback = null;
+            AsyncSocketPort = 33333;
+            timerCount = new System.Timers.Timer(2000);
+            timerCount.Elapsed += SendTimeToClients;
         }
 
         public bool StartServer(int PortNo)
@@ -47,6 +56,8 @@ namespace TCPServer
             }
             IncomingConnectionThread = new Thread(new ThreadStart(IncomingConnectionThreadProc));
             IncomingConnectionThread.Start();
+            IncomingAsyncConnectionThread = new Thread(new ThreadStart(IncomingAsyncConnectionThreadProc));
+            IncomingAsyncConnectionThread.Start();
             return true;
         }
 
@@ -128,7 +139,87 @@ namespace TCPServer
                 {
                     OnClientConnected(newConnectionSocket);
                 }
+                // На случай, если таймер упал
+                if (timerCount != null && !timerCount.Enabled)
+                {
+                    timerCount.Enabled = true;
+                }
             }
+        }
+
+        private void IncomingAsyncConnectionThreadProc()
+        {
+            Socket AsyncIncomingConnectionSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            if (AsyncIncomingConnectionSocket == null)
+            {
+                Trace.TraceError("Не удалось создать AsyncIncomingConnectionSocket");
+                OnServerExit();
+                return;
+            }
+            try
+            {
+                IPEndPoint ep = new IPEndPoint(IPAddress.Any, AsyncSocketPort);
+                AsyncIncomingConnectionSocket.Bind(ep);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError("Не удалось сделать Bind() для AsyncIncomingConnectionSocket");
+                Trace.TraceError(ex.ToString());
+                OnServerExit();
+                return;
+            }
+            try
+            {
+                AsyncIncomingConnectionSocket.Listen(5);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError("Не удалось сделать Listen() для AsyncIncomingConnectionSocket");
+                Trace.TraceError(ex.ToString());
+                OnServerExit();
+                return;
+            }
+            while (true)
+            {
+                Socket newConnectionSocket = null;
+                try
+                {
+                    Trace.TraceInformation(@"Ожидаем входящего асинхронного подключения");
+                    newConnectionSocket = AsyncIncomingConnectionSocket.Accept();
+                }
+                catch (Exception ex)
+                {
+                    Trace.TraceError("Не удалось сделать Accept() для AsyncIncomingConnectionSocket");
+                    Trace.TraceError(ex.ToString());
+                    OnServerExit();
+                    return;
+                }
+                if (newConnectionSocket != null)
+                {
+                    OnClientConnected(newConnectionSocket);
+                    timerCount.Start();
+                    return;
+                }
+            }
+        }
+
+        private void SendTimeToClients(Object source, ElapsedEventArgs e)
+        {
+            byte[] SendBuffer = new byte[8192];
+            byte[] Reply = null;
+            byte[] time = Encoding.UTF8.GetBytes(e.SignalTime.ToString());
+            //Array.Copy(time, Request, BytesReceived);
+            for (int i = 0; i < CommunicationClients.Length; i++)
+            {
+                if (CommunicationClients[i].ClientGuid == -1) continue;
+                bool bReply = CommunicationClients[i].OnSyncRequestReceived(CommunicationClients[i].ClientGuid, time, out Reply);
+                if ((bReply == true) && (Reply != null))
+                {
+                    if (!CommunicationClients[i].SendAsync(Reply))
+                        Trace.TraceError("Не удалось передать время клиенту");
+                }
+            }
+            
         }
 
         private void OnClientConnected(Socket ClientSocket)
@@ -181,6 +272,8 @@ namespace TCPServer
         }
         private void OnServerExit()
         {
+            timerCount.Stop();
+            timerCount.Close();
             Trace.TraceError(@"OnServerExit() - критическая ошибка");
             if (OnServerExitCallback != null)
                 OnServerExitCallback();
@@ -192,7 +285,7 @@ namespace TCPServer
             {
                 if (CommunicationClients[i] != null)
                 {
-                    if (CommunicationClients[i].ClientGuid == -1)
+                    if (CommunicationClients[i].ClientGuid==i || CommunicationClients[i].ClientGuid == -1)
                         return i;
                 }
             }

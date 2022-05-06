@@ -1,6 +1,6 @@
 namespace TCPServer
 {
-    public partial class Form1 : Form
+    public partial class Form1 : System.Windows.Forms.Form
     {
         private CommunicationServer Server;
         private CommunicationServerClient Client;
@@ -22,17 +22,22 @@ namespace TCPServer
                 Server.OnServerExitCallback = OnServerExit;
                 Server.OnRequestRecievedCallback = OnRequestReceived;
                 Client = new CommunicationServerClient();
+                radioOnOff.Checked = true;
+                radioOnOff.Text = "ON";
             }
         }
 
         private void buttonStopServer_Click(object sender, EventArgs e)
         {
             Server.StopServer();
+            //radioOnOff.Checked = false;
+            //radioOnOff.Text = "OFF";
         }
 
         private void OnServerExit()
         {
-            MessageBox.Show(@"Сервер остановлен", @"Уведомление", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            this.radioOnOff.Checked = false;
+            this.radioOnOff.Text = "OFF";
         }
 
         private bool OnRequestReceived(int ClientGUID, byte[] Request, out byte[] Reply)

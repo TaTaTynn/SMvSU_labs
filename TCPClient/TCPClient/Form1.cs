@@ -21,6 +21,7 @@ namespace TCPClient
                 if (ClientGUID != -1)
                 {
                     Trace.TraceInformation(@"Соединение прошло успешно. ClientGuid = {0}", ClientGUID);
+                    Client.AsyncTimeReceived = RefreshTime;
                 }
                 else
                 {
@@ -60,6 +61,11 @@ namespace TCPClient
                     MessageBox.Show(@"Не удалось получить ответ от сервера!", @"Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
+        }
+
+        private void RefreshTime()
+        {
+            this.labelTime.Text=Client.getTime();
         }
     }
 }

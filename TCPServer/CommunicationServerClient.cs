@@ -12,10 +12,10 @@ namespace TCPServer
     internal class CommunicationServerClient
     {
         private Socket SyncSocket;
+        private Socket AsyncSocket;
         private Thread SyncSocketThread;
         private int _ClientGUID = 0;
-        private int _asyncSocket = 22225;
-        private System.Timers.Timer asyncTimer;
+        private int _asyncSocket = 33333;
         public int ClientGuid
         {
             get { return _ClientGUID; }
@@ -38,6 +38,10 @@ namespace TCPServer
             {
                 SyncSocket.Close();
             }
+            if (AsyncSocket != null)
+            {
+                AsyncSocket.Close();
+            }
             if (SyncSocketThread != null)
             {
                 SyncSocketThread.Interrupt();
@@ -53,12 +57,15 @@ namespace TCPServer
 
         public int FinishConnect(Socket ClientSocket, int ConnectionGUID)
         {
-            SyncSocket = ClientSocket;
+            if (SyncSocket == null)
+                SyncSocket = ClientSocket;
+            else
+                AsyncSocket = ClientSocket;
             _ClientGUID = ConnectionGUID;
             //Отправляем идентификатор соединения
             try
             {
-                int BytesSend = SyncSocket.Send(BitConverter.GetBytes(_ClientGUID));
+                int BytesSend = ClientSocket.Send(BitConverter.GetBytes(_ClientGUID));
             }
             catch (Exception ex)
             {
@@ -70,25 +77,16 @@ namespace TCPServer
             if (_ClientGUID == -1)
                 return -1;
             //Создаем поток синхронного канала
-            SyncSocketThread = new Thread(new ThreadStart(SyncSocketThreadProc));
-            SyncSocketThread.Start();
+            if (SyncSocketThread == null)
+            {
+                SyncSocketThread = new Thread(new ThreadStart(SyncSocketThreadProc));
+                SyncSocketThread.Start();
+            }
             return 0;
         }
 
         private void SyncSocketThreadProc()
         {
-            //Отправляем нотификацию, что сервер готов
-            try
-            {
-                int BytesSend = SyncSocket.Send(BitConverter.GetBytes(_ClientGUID));
-            }
-            catch (Exception ex)
-            {
-                Trace.TraceError(@"Не получилось отправить нотификацию, что сервер готов");
-                Trace.TraceError(ex.ToString());
-                OnClientExit();
-                return;
-            }
             //Отправляем адрес асинхронного сокета
             try
             {
@@ -97,6 +95,18 @@ namespace TCPServer
             catch (Exception ex)
             {
                 Trace.TraceError(@"Не получилось отправить адрес асинхронного сокета");
+                Trace.TraceError(ex.ToString());
+                OnClientExit();
+                return;
+            }
+            //Отправляем нотификацию, что сервер готов
+            try
+            {
+                int BytesSend = SyncSocket.Send(BitConverter.GetBytes(_ClientGUID));
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(@"Не получилось отправить нотификацию, что сервер готов");
                 Trace.TraceError(ex.ToString());
                 OnClientExit();
                 return;
@@ -149,6 +159,21 @@ namespace TCPServer
             }
         }
 
-
+        public bool SendAsync(byte[] Reply)
+        {
+            //Отправляем время клиенту
+            try
+            {
+                int BytesSend = AsyncSocket.Send(Reply);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(@"Не получилось отправить клиенту время");
+                Trace.TraceError(ex.ToString());
+                OnClientExit();
+                return false;
+            }
+            return true;
+        }
     }
 }
