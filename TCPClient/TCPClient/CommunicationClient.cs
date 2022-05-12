@@ -267,6 +267,8 @@ namespace TCPClient
             {
                 AsyncSocket.Close();
             }
+            sTime = "--";
+            AsyncTimeReceived();
         }
 
         private void OnClientExit()

@@ -35,7 +35,7 @@ namespace TCPServer
             OnRequestRecievedCallback = null;
             OnClientDisconnectedCallback = null;
             AsyncSocketPort = 33333;
-            timerCount = new System.Timers.Timer(2000);
+            timerCount = new System.Timers.Timer(10000);
             timerCount.Elapsed += SendTimeToClients;
         }
 
@@ -197,8 +197,8 @@ namespace TCPServer
                 if (newConnectionSocket != null)
                 {
                     OnClientConnected(newConnectionSocket);
-                    timerCount.Start();
-                    return;
+                    if (!timerCount.Enabled)
+                        timerCount.Start();
                 }
             }
         }
@@ -211,7 +211,7 @@ namespace TCPServer
             //Array.Copy(time, Request, BytesReceived);
             for (int i = 0; i < CommunicationClients.Length; i++)
             {
-                if (CommunicationClients[i].ClientGuid == -1) continue;
+                if (CommunicationClients[i]!= null && CommunicationClients[i].ClientGuid == -1) continue;
                 bool bReply = CommunicationClients[i].OnSyncRequestReceived(CommunicationClients[i].ClientGuid, time, out Reply);
                 if ((bReply == true) && (Reply != null))
                 {

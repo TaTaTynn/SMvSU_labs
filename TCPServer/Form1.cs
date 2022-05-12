@@ -36,8 +36,8 @@ namespace TCPServer
 
         private void OnServerExit()
         {
-            this.radioOnOff.Checked = false;
-            this.radioOnOff.Text = "OFF";
+            this.radioOnOff.Invoke(new Action(() => this.radioOnOff.Checked = false));
+            this.radioOnOff.Invoke(new Action(() => this.radioOnOff.Text = "OFF"));
         }
 
         private bool OnRequestReceived(int ClientGUID, byte[] Request, out byte[] Reply)

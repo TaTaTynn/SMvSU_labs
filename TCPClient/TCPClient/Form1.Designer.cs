@@ -38,9 +38,10 @@
             // 
             // buttonConnect
             // 
-            this.buttonConnect.Location = new System.Drawing.Point(213, 13);
+            this.buttonConnect.Location = new System.Drawing.Point(243, 17);
+            this.buttonConnect.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.buttonConnect.Name = "buttonConnect";
-            this.buttonConnect.Size = new System.Drawing.Size(75, 23);
+            this.buttonConnect.Size = new System.Drawing.Size(86, 31);
             this.buttonConnect.TabIndex = 0;
             this.buttonConnect.Text = "Connect";
             this.buttonConnect.UseVisualStyleBackColor = true;
@@ -48,9 +49,10 @@
             // 
             // buttonDisconnect
             // 
-            this.buttonDisconnect.Location = new System.Drawing.Point(213, 42);
+            this.buttonDisconnect.Location = new System.Drawing.Point(243, 56);
+            this.buttonDisconnect.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.buttonDisconnect.Name = "buttonDisconnect";
-            this.buttonDisconnect.Size = new System.Drawing.Size(75, 23);
+            this.buttonDisconnect.Size = new System.Drawing.Size(86, 31);
             this.buttonDisconnect.TabIndex = 1;
             this.buttonDisconnect.Text = "Disconnect";
             this.buttonDisconnect.UseVisualStyleBackColor = true;
@@ -58,16 +60,18 @@
             // 
             // textBoxRequest
             // 
-            this.textBoxRequest.Location = new System.Drawing.Point(12, 71);
+            this.textBoxRequest.Location = new System.Drawing.Point(14, 95);
+            this.textBoxRequest.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.textBoxRequest.Name = "textBoxRequest";
-            this.textBoxRequest.Size = new System.Drawing.Size(194, 23);
+            this.textBoxRequest.Size = new System.Drawing.Size(221, 27);
             this.textBoxRequest.TabIndex = 2;
             // 
             // buttonSendRequest
             // 
-            this.buttonSendRequest.Location = new System.Drawing.Point(212, 71);
+            this.buttonSendRequest.Location = new System.Drawing.Point(242, 95);
+            this.buttonSendRequest.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.buttonSendRequest.Name = "buttonSendRequest";
-            this.buttonSendRequest.Size = new System.Drawing.Size(75, 23);
+            this.buttonSendRequest.Size = new System.Drawing.Size(86, 31);
             this.buttonSendRequest.TabIndex = 3;
             this.buttonSendRequest.Text = "Отправить";
             this.buttonSendRequest.UseVisualStyleBackColor = true;
@@ -77,9 +81,9 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.label1.Location = new System.Drawing.Point(35, 32);
+            this.label1.Location = new System.Drawing.Point(33, 43);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(48, 15);
+            this.label1.Size = new System.Drawing.Size(61, 20);
             this.label1.TabIndex = 4;
             this.label1.Text = "Время:";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -87,23 +91,24 @@
             // labelTime
             // 
             this.labelTime.AutoSize = true;
-            this.labelTime.Location = new System.Drawing.Point(89, 32);
+            this.labelTime.Location = new System.Drawing.Point(95, 43);
             this.labelTime.Name = "labelTime";
-            this.labelTime.Size = new System.Drawing.Size(17, 15);
+            this.labelTime.Size = new System.Drawing.Size(21, 20);
             this.labelTime.TabIndex = 5;
             this.labelTime.Text = "--";
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(300, 132);
+            this.ClientSize = new System.Drawing.Size(343, 141);
             this.Controls.Add(this.labelTime);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.buttonSendRequest);
             this.Controls.Add(this.textBoxRequest);
             this.Controls.Add(this.buttonDisconnect);
             this.Controls.Add(this.buttonConnect);
+            this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "Form1";
             this.Text = "TCP/IP Клиент";
             this.ResumeLayout(false);

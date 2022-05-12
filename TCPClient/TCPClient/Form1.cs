@@ -21,7 +21,7 @@ namespace TCPClient
                 if (ClientGUID != -1)
                 {
                     Trace.TraceInformation(@"Соединение прошло успешно. ClientGuid = {0}", ClientGUID);
-                    Client.AsyncTimeReceived = RefreshTime;
+                    Client.AsyncTimeReceived += RefreshTime;
                 }
                 else
                 {
@@ -65,7 +65,10 @@ namespace TCPClient
 
         private void RefreshTime()
         {
-            this.labelTime.Text=Client.getTime();
+            this.labelTime.Invoke(new Action(() => this.labelTime.ForeColor=Color.Red));
+            this.labelTime.Invoke(new Action(() => this.labelTime.Text = Client.getTime()));
+            System.Threading.Thread.Sleep(100);
+            this.labelTime.Invoke(new Action(() => this.labelTime.ForeColor=Color.Black));
         }
     }
 }
