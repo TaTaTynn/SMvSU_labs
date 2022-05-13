@@ -92,18 +92,18 @@ namespace TCPClient
                 return ClientGUID;
             }
             ////////////////////////////////////////////////////////////////////////
-            byte[] bAsyncsPort = new byte[5];
-            try
-            {
-                BytesReceived = SyncSocket.Receive(bAsyncsPort, 5, SocketFlags.None);
-            }
-            catch (Exception ex)
-            {
-                Trace.TraceError(@"Не удалось получить номер асинхронного порта");
-                Trace.TraceError(ex.ToString());
-                return -1;
-            }
-            int AsyncPortNo = BitConverter.ToInt32(bAsyncsPort, 0);
+            //byte[] bAsyncsPort = new byte[5];
+            //try
+            //{
+            //    BytesReceived = SyncSocket.Receive(bAsyncsPort, 5, SocketFlags.None);
+            //}
+            //catch (Exception ex)
+            //{
+            //    Trace.TraceError(@"Не удалось получить номер асинхронного порта");
+            //    Trace.TraceError(ex.ToString());
+            //    return -1;
+            //}
+            //int AsyncPortNo = BitConverter.ToInt32(bAsyncsPort, 0);
             ////////////////////////////////////////////////////////////////////////
             //Ожидаем подтверждения, что сервер готов
             byte[] bNotification = new byte[1024];
@@ -117,7 +117,7 @@ namespace TCPClient
                 Trace.TraceError(ex.ToString());
                 return -1;
             }
-            this.ConnectAsync(HostName, AsyncPortNo);
+            this.ConnectAsync(HostName, 33333);
             //Создаем мьютекс для синхронного канала
             SendSyncMutex = new Mutex();
             return ClientGUID;
@@ -185,30 +185,30 @@ namespace TCPClient
                 return ClientGUID;
             }
             ////////////////////////////////////////////////////////////////////////
-            byte[] bAsyncsPort = new byte[5];
-            try
-            {
-                BytesReceived = AsyncSocket.Receive(bAsyncsPort, 5, SocketFlags.None);
-            }
-            catch (Exception ex)
-            {
-                Trace.TraceError(@"Не удалось получить номер асинхронного порта (который уже не нужен, но все равно отправляется)");
-                Trace.TraceError(ex.ToString());
-                return -1;
-            }
+            //byte[] bAsyncsPort = new byte[5];
+            //try
+            //{
+            //    BytesReceived = AsyncSocket.Receive(bAsyncsPort, 5, SocketFlags.None);
+            //}
+            //catch (Exception ex)
+            //{
+            //    Trace.TraceError(@"Не удалось получить номер асинхронного порта (который уже не нужен, но все равно отправляется)");
+            //    Trace.TraceError(ex.ToString());
+            //    return -1;
+            //}
             ////////////////////////////////////////////////////////////////////////
             //Ожидаем подтверждения, что сервер готов
-            byte[] bNotification = new byte[1024];
-            try
-            {
-                BytesReceived = AsyncSocket.Receive(bNotification, 1024, SocketFlags.None);
-            }
-            catch (Exception ex)
-            {
-                Trace.TraceError(@"Не удалось получить подтверждение готовности сервера");
-                Trace.TraceError(ex.ToString());
-                return -1;
-            }
+            //byte[] bNotification = new byte[1024];
+            //try
+            //{
+            //    BytesReceived = AsyncSocket.Receive(bNotification, 1024, SocketFlags.None);
+            //}
+            //catch (Exception ex)
+            //{
+            //    Trace.TraceError(@"Не удалось получить подтверждение готовности сервера");
+            //    Trace.TraceError(ex.ToString());
+            //    return -1;
+            //}
             //Запускаем поток, ожидающий от сервера время
             if (AsyncSocketThread == null)
             {
@@ -268,7 +268,8 @@ namespace TCPClient
                 AsyncSocket.Close();
             }
             sTime = "--";
-            AsyncTimeReceived();
+            if (AsyncTimeReceived != null)
+                AsyncTimeReceived();
         }
 
         private void OnClientExit()

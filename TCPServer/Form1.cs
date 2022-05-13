@@ -13,7 +13,7 @@ namespace TCPServer
 
         private void buttonStartServer_Click(object sender, EventArgs e)
         {
-            if (Server.StartServer(22222) == false)
+            if (Server.StartServer(22222, 33333) == false)
             {
                 MessageBox.Show(@"Не удалось стартовать сервер", @"Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -30,8 +30,6 @@ namespace TCPServer
         private void buttonStopServer_Click(object sender, EventArgs e)
         {
             Server.StopServer();
-            //radioOnOff.Checked = false;
-            //radioOnOff.Text = "OFF";
         }
 
         private void OnServerExit()

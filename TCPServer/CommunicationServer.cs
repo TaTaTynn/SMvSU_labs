@@ -19,6 +19,7 @@ namespace TCPServer
     {
         private int ListenSocketPort;
         private int AsyncSocketPort;
+        private int currentGUID;
         private Socket IncomingConnectionSocket;
         private Thread IncomingConnectionThread;
         private Thread IncomingAsyncConnectionThread;
@@ -34,14 +35,15 @@ namespace TCPServer
             OnServerExitCallback = null;
             OnRequestRecievedCallback = null;
             OnClientDisconnectedCallback = null;
-            AsyncSocketPort = 33333;
             timerCount = new System.Timers.Timer(10000);
             timerCount.Elapsed += SendTimeToClients;
+            currentGUID = -1;
         }
 
-        public bool StartServer(int PortNo)
+        public bool StartServer(int PortNo, int AsPortNo)
         {
             ListenSocketPort = PortNo;
+            AsyncSocketPort = AsPortNo;
             CommunicationClients = new CommunicationServerClient[10];
             if (CommunicationClients == null)
                 return false;
@@ -56,8 +58,8 @@ namespace TCPServer
             }
             IncomingConnectionThread = new Thread(new ThreadStart(IncomingConnectionThreadProc));
             IncomingConnectionThread.Start();
-            IncomingAsyncConnectionThread = new Thread(new ThreadStart(IncomingAsyncConnectionThreadProc));
-            IncomingAsyncConnectionThread.Start();
+            //IncomingAsyncConnectionThread = new Thread(new ThreadStart(IncomingAsyncConnectionThreadProc));
+            //IncomingAsyncConnectionThread.Start();
             return true;
         }
 
@@ -66,6 +68,10 @@ namespace TCPServer
             if (IncomingConnectionThread != null)
             {
                 IncomingConnectionThread.Interrupt();
+            }
+            if (IncomingAsyncConnectionThread != null)
+            {
+                IncomingAsyncConnectionThread.Interrupt();
             }
             if (IncomingConnectionSocket != null)
             {
@@ -196,35 +202,58 @@ namespace TCPServer
                 }
                 if (newConnectionSocket != null)
                 {
-                    OnClientConnected(newConnectionSocket);
-                    if (!timerCount.Enabled)
-                        timerCount.Start();
+                    //if (timerCount.Enabled)
+                    //    timerCount.Stop();
+                    OnClientAsyncConnected(newConnectionSocket, currentGUID);
+                    //if (!timerCount.Enabled)
+                    //    timerCount.Start();
+                    currentGUID = -1;
                 }
             }
         }
 
         private void SendTimeToClients(Object source, ElapsedEventArgs e)
         {
-            byte[] SendBuffer = new byte[8192];
-            byte[] Reply = null;
             byte[] time = Encoding.UTF8.GetBytes(e.SignalTime.ToString());
-            //Array.Copy(time, Request, BytesReceived);
             for (int i = 0; i < CommunicationClients.Length; i++)
             {
                 if (CommunicationClients[i]!= null && CommunicationClients[i].ClientGuid == -1) continue;
-                bool bReply = CommunicationClients[i].OnSyncRequestReceived(CommunicationClients[i].ClientGuid, time, out Reply);
-                if ((bReply == true) && (Reply != null))
-                {
-                    if (!CommunicationClients[i].SendAsync(Reply))
+                    if (!CommunicationClients[i].SendAsync(time))
                         Trace.TraceError("Не удалось передать время клиенту");
-                }
             }
-            
         }
 
         private void OnClientConnected(Socket ClientSocket)
         {
-            int ClientGUID = GetGUIDForClient();
+            currentGUID = GetGUIDForClient();
+            if (currentGUID == -1)
+            {
+                CommunicationClients[0].FinishConnect(ClientSocket, currentGUID);
+                CommunicationClients[0].Disconnect();
+            }
+            IncomingAsyncConnectionThread = new Thread(new ThreadStart(IncomingAsyncConnectionThreadProc));
+            IncomingAsyncConnectionThread.Start();
+            CommunicationServerClient client = CommunicationClients[currentGUID];
+            if (client == null)
+                return;
+            int result = client.FinishConnect(ClientSocket, currentGUID);
+            if (result == 0)
+            {
+                client.OnSyncRequestReceived = OnRequestRecieved;
+                client.OnClientDisconnected = OnClientDisconnected;
+                Trace.TraceInformation(@"Клиент приконнектился. ClientGIUD = {0}. Всего клиентов соединено {1}.",
+                currentGUID, ClientNum());
+            }
+            else
+            {
+                client.Disconnect();
+                Trace.TraceInformation(@"Коннект не удался. ClientGIUD = {0}. Всего клиентов соединено {1}.",
+                currentGUID, ClientNum());
+            }
+        }
+        private void OnClientAsyncConnected(Socket ClientSocket, int ClientGUID)
+        {
+            //int ClientGUID = TheLastGUID();
             if (ClientGUID == -1)
             {
                 CommunicationClients[0].FinishConnect(ClientSocket, ClientGUID);
@@ -238,17 +267,34 @@ namespace TCPServer
             {
                 client.OnSyncRequestReceived = OnRequestRecieved;
                 client.OnClientDisconnected = OnClientDisconnected;
-                Trace.TraceInformation(@"Клиент приконнектился. ClientGIUD = {0}. Всего клиентов соединено {1}.",
-                ClientGUID, @"n/a");
+                Trace.TraceInformation(@"Клиент приконнектился к асинхронному сокету. ClientGIUD = {0}. Всего клиентов соединено {1}.",
+                ClientGUID, ClientNum());
             }
             else
             {
                 client.Disconnect();
-                Trace.TraceInformation(@"Коннект не удался. ClientGIUD = {0}. Всего клиентов соединено {1}.",
-                ClientGUID, @"n/a");
+                Trace.TraceInformation(@"Коннект к асинхронному сокету не удался. ClientGIUD = {0}. Всего клиентов соединено {1}.",
+                ClientGUID, ClientNum());
             }
         }
-
+        int TheLastGUID()
+        {
+            int ClientGUID = -1;
+            foreach (CommunicationServerClient clientelem in CommunicationClients)
+            {
+                ClientGUID = clientelem.ClientGuid > ClientGUID ? clientelem.ClientGuid : ClientGUID;
+            }
+            return ClientGUID;
+        }
+        int ClientNum()
+        {
+            int num = 0;
+            foreach (CommunicationServerClient clientelem in CommunicationClients)
+            {
+                num = clientelem.ClientGuid > 0 ? num + 1 : num;
+            }
+            return num;
+        }
         private void OnClientDisconnected(int ClientGUID)
         {
             if (OnClientDisconnectedCallback != null)
@@ -257,7 +303,7 @@ namespace TCPServer
             if (client != null)
             {
                 Trace.TraceInformation(@"Клиент отконнектился. ClientGIUD = {0}. Всего клиентов соединено {1}.",
-                ClientGUID, @"xz");
+                ClientGUID, ClientNum());
                 client.Disconnect();
             }
         }
@@ -285,7 +331,7 @@ namespace TCPServer
             {
                 if (CommunicationClients[i] != null)
                 {
-                    if (CommunicationClients[i].ClientGuid==i || CommunicationClients[i].ClientGuid == -1)
+                    if (CommunicationClients[i].ClientGuid == -1)
                         return i;
                 }
             }

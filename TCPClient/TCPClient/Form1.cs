@@ -22,6 +22,11 @@ namespace TCPClient
                 {
                     Trace.TraceInformation(@"Соединение прошло успешно. ClientGuid = {0}", ClientGUID);
                     Client.AsyncTimeReceived += RefreshTime;
+                    Client.OnClientDisconnected = ClientDisconnected;
+                    labelState.Text = "Connected";
+                    labelGUID.Text = " " + ClientGUID.ToString();
+                    labelGUID.ForeColor = Color.DarkGreen;
+                    labelGUID.BackColor = Color.PaleGreen;
                 }
                 else
                 {
@@ -62,13 +67,26 @@ namespace TCPClient
                 }
             }
         }
+        private void ClientDisconnected()
+        {
+            this.labelState.Invoke(new Action(() => this.labelState.Text = "Not connected"));
 
+            this.labelGUID.Invoke(new Action(() => this.labelGUID.Text = "-1"));
+            this.labelGUID.Invoke(new Action(() => this.labelGUID.ForeColor = System.Drawing.SystemColors.ControlDark));
+            this.labelGUID.Invoke(new Action(() => this.labelGUID.BackColor = System.Drawing.SystemColors.ControlLight));
+        }
         private void RefreshTime()
         {
             this.labelTime.Invoke(new Action(() => this.labelTime.ForeColor=Color.Red));
             this.labelTime.Invoke(new Action(() => this.labelTime.Text = Client.getTime()));
             System.Threading.Thread.Sleep(100);
             this.labelTime.Invoke(new Action(() => this.labelTime.ForeColor=Color.Black));
+        }
+
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            Client.Disconnect();
+            ClientDisconnected();
         }
     }
 }
