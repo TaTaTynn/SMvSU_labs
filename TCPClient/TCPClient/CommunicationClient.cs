@@ -270,6 +270,8 @@ namespace TCPClient
             sTime = "--";
             if (AsyncTimeReceived != null)
                 AsyncTimeReceived();
+            if (OnClientDisconnected != null)
+                OnClientDisconnected();
         }
 
         private void OnClientExit()

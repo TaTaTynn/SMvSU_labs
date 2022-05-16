@@ -30,12 +30,14 @@ namespace TCPServer
         private void buttonStopServer_Click(object sender, EventArgs e)
         {
             Server.StopServer();
+            radioOnOff.Checked = false;
+            radioOnOff.Text = "OFF";
         }
 
         private void OnServerExit()
         {
-            this.radioOnOff.Invoke(new Action(() => this.radioOnOff.Checked = false));
-            this.radioOnOff.Invoke(new Action(() => this.radioOnOff.Text = "OFF"));
+            //this.radioOnOff.Invoke(new Action(() => this.radioOnOff.Checked = false));
+            //this.radioOnOff.Invoke(new Action(() => this.radioOnOff.Text = "OFF"));
         }
 
         private bool OnRequestReceived(int ClientGUID, byte[] Request, out byte[] Reply)

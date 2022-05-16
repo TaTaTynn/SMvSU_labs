@@ -19,7 +19,7 @@ namespace TCPServer
     {
         private int ListenSocketPort;
         private int AsyncSocketPort;
-        private int currentGUID;
+        private static int currentGUID;
         private Socket IncomingConnectionSocket;
         private Thread IncomingConnectionThread;
         private Thread IncomingAsyncConnectionThread;
@@ -58,8 +58,8 @@ namespace TCPServer
             }
             IncomingConnectionThread = new Thread(new ThreadStart(IncomingConnectionThreadProc));
             IncomingConnectionThread.Start();
-            //IncomingAsyncConnectionThread = new Thread(new ThreadStart(IncomingAsyncConnectionThreadProc));
-            //IncomingAsyncConnectionThread.Start();
+            IncomingAsyncConnectionThread = new Thread(new ThreadStart(IncomingAsyncConnectionThreadProc));
+            IncomingAsyncConnectionThread.Start();
             return true;
         }
 
@@ -88,10 +88,11 @@ namespace TCPServer
                     }
                 }
             }
-            if (OnServerExitCallback != null)
-            {
-                OnServerExitCallback();
-            }
+            //if (OnServerExitCallback != null)
+            //{
+            //    OnServerExitCallback();
+            //}
+            OnServerExitCallback?.Invoke();
         }
 
         private void IncomingConnectionThreadProc()
@@ -145,11 +146,6 @@ namespace TCPServer
                 {
                     OnClientConnected(newConnectionSocket);
                 }
-                // На случай, если таймер упал
-                if (timerCount != null && !timerCount.Enabled)
-                {
-                    timerCount.Enabled = true;
-                }
             }
         }
 
@@ -202,18 +198,17 @@ namespace TCPServer
                 }
                 if (newConnectionSocket != null)
                 {
-                    //if (timerCount.Enabled)
-                    //    timerCount.Stop();
                     OnClientAsyncConnected(newConnectionSocket, currentGUID);
-                    //if (!timerCount.Enabled)
-                    //    timerCount.Start();
                     currentGUID = -1;
+                    if (!timerCount.Enabled)
+                        timerCount.Start();
                 }
             }
         }
 
         private void SendTimeToClients(Object source, ElapsedEventArgs e)
         {
+            Trace.TraceInformation(@"Шлем клиентам время");
             byte[] time = Encoding.UTF8.GetBytes(e.SignalTime.ToString());
             for (int i = 0; i < CommunicationClients.Length; i++)
             {
@@ -231,8 +226,8 @@ namespace TCPServer
                 CommunicationClients[0].FinishConnect(ClientSocket, currentGUID);
                 CommunicationClients[0].Disconnect();
             }
-            IncomingAsyncConnectionThread = new Thread(new ThreadStart(IncomingAsyncConnectionThreadProc));
-            IncomingAsyncConnectionThread.Start();
+            //IncomingAsyncConnectionThread = new Thread(new ThreadStart(IncomingAsyncConnectionThreadProc));
+            //IncomingAsyncConnectionThread.Start();
             CommunicationServerClient client = CommunicationClients[currentGUID];
             if (client == null)
                 return;
@@ -277,15 +272,6 @@ namespace TCPServer
                 ClientGUID, ClientNum());
             }
         }
-        int TheLastGUID()
-        {
-            int ClientGUID = -1;
-            foreach (CommunicationServerClient clientelem in CommunicationClients)
-            {
-                ClientGUID = clientelem.ClientGuid > ClientGUID ? clientelem.ClientGuid : ClientGUID;
-            }
-            return ClientGUID;
-        }
         int ClientNum()
         {
             int num = 0;
@@ -302,9 +288,9 @@ namespace TCPServer
             CommunicationServerClient client = CommunicationClients[ClientGUID];
             if (client != null)
             {
+                client.Disconnect();
                 Trace.TraceInformation(@"Клиент отконнектился. ClientGIUD = {0}. Всего клиентов соединено {1}.",
                 ClientGUID, ClientNum());
-                client.Disconnect();
             }
         }
         private bool OnRequestRecieved(int ClientGUID, byte[] Request, out byte[] Reply)
