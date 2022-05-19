@@ -47,5 +47,10 @@ namespace TCPServer
             Array.Copy(Request, Reply, Request.Length);
             return true;
         }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Server.StopServer();
+        }
     }
 }
