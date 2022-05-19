@@ -17,7 +17,7 @@ namespace TCPClient
             try
             {
                 //Пытаемся соединиться с сервером на локальном компьютере, порт 22222
-                int ClientGUID = Client.Connect("localhost", 22222);
+                int ClientGUID = Client.Connect("localhost", 22222, 33333);
                 if (ClientGUID != -1)
                 {
                     Trace.TraceInformation(@"Соединение прошло успешно. ClientGuid = {0}", ClientGUID);
@@ -27,6 +27,8 @@ namespace TCPClient
                     labelGUID.Text = " " + ClientGUID.ToString();
                     labelGUID.ForeColor = Color.DarkGreen;
                     labelGUID.BackColor = Color.PaleGreen;
+                    checkSync.Checked = Client.connSync;
+                    checkAsync.Checked = Client.connAsync;
                 }
                 else
                 {
@@ -74,6 +76,9 @@ namespace TCPClient
             this.labelGUID.Invoke(new Action(() => this.labelGUID.Text = "-1"));
             this.labelGUID.Invoke(new Action(() => this.labelGUID.ForeColor = System.Drawing.SystemColors.ControlDark));
             this.labelGUID.Invoke(new Action(() => this.labelGUID.BackColor = System.Drawing.SystemColors.ControlLight));
+
+            this.checkSync.Invoke(new Action(() => this.checkSync.Checked = Client.connSync));
+            this.checkAsync.Invoke(new Action(() => this.checkAsync.Checked = Client.connAsync));
         }
         private void RefreshTime()
         {
@@ -83,7 +88,7 @@ namespace TCPClient
             this.labelTime.Invoke(new Action(() => this.labelTime.ForeColor=Color.Black));
         }
 
-        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             Client.Disconnect();
         }

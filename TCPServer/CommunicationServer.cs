@@ -17,10 +17,16 @@ namespace TCPServer
     public delegate void ClientDisconnectedDelegate(int ClientGUID);
     internal class CommunicationServer
     {
+        public bool ServerState
+        {
+            get { return _ServerState; }
+        }
+        private bool _ServerState;
         private int ListenSocketPort;
         private int AsyncSocketPort;
         private static int currentGUID;
         private Socket IncomingConnectionSocket;
+        private Socket AsyncIncomingConnectionSocket;
         private Thread IncomingConnectionThread;
         private Thread IncomingAsyncConnectionThread;
         private CommunicationServerClient[] CommunicationClients;
@@ -38,6 +44,7 @@ namespace TCPServer
             timerCount = new System.Timers.Timer(10000);
             timerCount.Elapsed += SendTimeToClients;
             currentGUID = -1;
+            _ServerState = false;
         }
 
         public bool StartServer(int PortNo, int AsPortNo)
@@ -60,22 +67,28 @@ namespace TCPServer
             IncomingConnectionThread.Start();
             IncomingAsyncConnectionThread = new Thread(new ThreadStart(IncomingAsyncConnectionThreadProc));
             IncomingAsyncConnectionThread.Start();
+            _ServerState = true;
             return true;
         }
 
         public void StopServer()
         {
-            if (IncomingConnectionThread != null)
+            _ServerState = false;
+            /*if (IncomingConnectionThread != null)
             {
                 IncomingConnectionThread.Interrupt();
             }
             if (IncomingAsyncConnectionThread != null)
             {
                 IncomingAsyncConnectionThread.Interrupt();
-            }
+            }*/
             if (IncomingConnectionSocket != null)
             {
                 IncomingConnectionSocket.Close();
+            }
+            if (AsyncIncomingConnectionSocket != null)
+            {
+                AsyncIncomingConnectionSocket.Close();
             }
             if (CommunicationClients != null)
             {
@@ -88,10 +101,6 @@ namespace TCPServer
                     }
                 }
             }
-            //if (OnServerExitCallback != null)
-            //{
-            //    OnServerExitCallback();
-            //}
             OnServerExitCallback?.Invoke();
         }
 
@@ -127,7 +136,7 @@ namespace TCPServer
                 OnServerExit();
                 return;
             }
-            while (true)
+            while (_ServerState)
             {
                 Socket newConnectionSocket = null;
                 try
@@ -151,7 +160,7 @@ namespace TCPServer
 
         private void IncomingAsyncConnectionThreadProc()
         {
-            Socket AsyncIncomingConnectionSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            AsyncIncomingConnectionSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             if (AsyncIncomingConnectionSocket == null)
             {
                 Trace.TraceError("Не удалось создать AsyncIncomingConnectionSocket");
@@ -181,7 +190,7 @@ namespace TCPServer
                 OnServerExit();
                 return;
             }
-            while (true)
+            while (_ServerState)
             {
                 Socket newConnectionSocket = null;
                 try
@@ -306,6 +315,7 @@ namespace TCPServer
         {
             timerCount.Stop();
             timerCount.Close();
+            _ServerState = false;
             Trace.TraceError(@"OnServerExit() - критическая ошибка");
             if (OnServerExitCallback != null)
                 OnServerExitCallback();

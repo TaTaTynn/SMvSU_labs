@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.buttonConnect = new System.Windows.Forms.Button();
             this.buttonDisconnect = new System.Windows.Forms.Button();
             this.textBoxRequest = new System.Windows.Forms.TextBox();
@@ -37,13 +38,16 @@
             this.label2 = new System.Windows.Forms.Label();
             this.labelState = new System.Windows.Forms.Label();
             this.labelGUID = new System.Windows.Forms.Label();
+            this.checkSync = new System.Windows.Forms.CheckBox();
+            this.checkAsync = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // buttonConnect
             // 
-            this.buttonConnect.Location = new System.Drawing.Point(213, 13);
+            this.buttonConnect.Location = new System.Drawing.Point(243, 17);
+            this.buttonConnect.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.buttonConnect.Name = "buttonConnect";
-            this.buttonConnect.Size = new System.Drawing.Size(75, 23);
+            this.buttonConnect.Size = new System.Drawing.Size(86, 31);
             this.buttonConnect.TabIndex = 0;
             this.buttonConnect.Text = "Connect";
             this.buttonConnect.UseVisualStyleBackColor = true;
@@ -51,9 +55,10 @@
             // 
             // buttonDisconnect
             // 
-            this.buttonDisconnect.Location = new System.Drawing.Point(213, 42);
+            this.buttonDisconnect.Location = new System.Drawing.Point(243, 56);
+            this.buttonDisconnect.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.buttonDisconnect.Name = "buttonDisconnect";
-            this.buttonDisconnect.Size = new System.Drawing.Size(75, 23);
+            this.buttonDisconnect.Size = new System.Drawing.Size(86, 31);
             this.buttonDisconnect.TabIndex = 1;
             this.buttonDisconnect.Text = "Disconnect";
             this.buttonDisconnect.UseVisualStyleBackColor = true;
@@ -61,16 +66,18 @@
             // 
             // textBoxRequest
             // 
-            this.textBoxRequest.Location = new System.Drawing.Point(12, 71);
+            this.textBoxRequest.Location = new System.Drawing.Point(14, 95);
+            this.textBoxRequest.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.textBoxRequest.Name = "textBoxRequest";
-            this.textBoxRequest.Size = new System.Drawing.Size(194, 23);
+            this.textBoxRequest.Size = new System.Drawing.Size(221, 27);
             this.textBoxRequest.TabIndex = 2;
             // 
             // buttonSendRequest
             // 
-            this.buttonSendRequest.Location = new System.Drawing.Point(212, 71);
+            this.buttonSendRequest.Location = new System.Drawing.Point(242, 95);
+            this.buttonSendRequest.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.buttonSendRequest.Name = "buttonSendRequest";
-            this.buttonSendRequest.Size = new System.Drawing.Size(75, 23);
+            this.buttonSendRequest.Size = new System.Drawing.Size(86, 31);
             this.buttonSendRequest.TabIndex = 3;
             this.buttonSendRequest.Text = "Отправить";
             this.buttonSendRequest.UseVisualStyleBackColor = true;
@@ -80,9 +87,9 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.label1.Location = new System.Drawing.Point(26, 42);
+            this.label1.Location = new System.Drawing.Point(30, 56);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(48, 15);
+            this.label1.Size = new System.Drawing.Size(61, 20);
             this.label1.TabIndex = 4;
             this.label1.Text = "Время:";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -90,9 +97,9 @@
             // labelTime
             // 
             this.labelTime.AutoSize = true;
-            this.labelTime.Location = new System.Drawing.Point(80, 42);
+            this.labelTime.Location = new System.Drawing.Point(91, 56);
             this.labelTime.Name = "labelTime";
-            this.labelTime.Size = new System.Drawing.Size(17, 15);
+            this.labelTime.Size = new System.Drawing.Size(21, 20);
             this.labelTime.TabIndex = 5;
             this.labelTime.Text = "--";
             // 
@@ -100,9 +107,9 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.label2.Location = new System.Drawing.Point(26, 17);
+            this.label2.Location = new System.Drawing.Point(30, 23);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(69, 15);
+            this.label2.Size = new System.Drawing.Size(86, 20);
             this.label2.TabIndex = 4;
             this.label2.Text = "Состояние:";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -112,9 +119,9 @@
             this.labelState.AutoSize = true;
             this.labelState.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.labelState.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
-            this.labelState.Location = new System.Drawing.Point(94, 17);
+            this.labelState.Location = new System.Drawing.Point(107, 23);
             this.labelState.Name = "labelState";
-            this.labelState.Size = new System.Drawing.Size(86, 15);
+            this.labelState.Size = new System.Drawing.Size(107, 20);
             this.labelState.TabIndex = 4;
             this.labelState.Text = "Not connected";
             this.labelState.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -126,15 +133,39 @@
             this.labelGUID.ForeColor = System.Drawing.SystemColors.ControlDark;
             this.labelGUID.Location = new System.Drawing.Point(0, 0);
             this.labelGUID.Name = "labelGUID";
-            this.labelGUID.Size = new System.Drawing.Size(18, 15);
+            this.labelGUID.Size = new System.Drawing.Size(23, 20);
             this.labelGUID.TabIndex = 6;
             this.labelGUID.Text = "-1";
             // 
+            // checkSync
+            // 
+            this.checkSync.AutoSize = true;
+            this.checkSync.Enabled = false;
+            this.checkSync.Location = new System.Drawing.Point(34, 0);
+            this.checkSync.Name = "checkSync";
+            this.checkSync.Size = new System.Drawing.Size(37, 24);
+            this.checkSync.TabIndex = 7;
+            this.checkSync.Text = "s";
+            this.checkSync.UseVisualStyleBackColor = true;
+            // 
+            // checkAsync
+            // 
+            this.checkAsync.AutoSize = true;
+            this.checkAsync.Enabled = false;
+            this.checkAsync.Location = new System.Drawing.Point(77, 0);
+            this.checkAsync.Name = "checkAsync";
+            this.checkAsync.Size = new System.Drawing.Size(39, 24);
+            this.checkAsync.TabIndex = 8;
+            this.checkAsync.Text = "a";
+            this.checkAsync.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(300, 106);
+            this.ClientSize = new System.Drawing.Size(343, 141);
+            this.Controls.Add(this.checkAsync);
+            this.Controls.Add(this.checkSync);
             this.Controls.Add(this.labelGUID);
             this.Controls.Add(this.labelTime);
             this.Controls.Add(this.labelState);
@@ -144,9 +175,11 @@
             this.Controls.Add(this.textBoxRequest);
             this.Controls.Add(this.buttonDisconnect);
             this.Controls.Add(this.buttonConnect);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "Form1";
             this.Text = "TCP/IP Клиент";
-            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -163,5 +196,7 @@
         private Label label2;
         private Label labelState;
         private Label labelGUID;
+        private CheckBox checkSync;
+        private CheckBox checkAsync;
     }
 }

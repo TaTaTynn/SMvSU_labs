@@ -3,7 +3,6 @@ namespace TCPServer
     public partial class Form1 : System.Windows.Forms.Form
     {
         private CommunicationServer Server;
-        private CommunicationServerClient Client;
 
         public Form1()
         {
@@ -21,7 +20,6 @@ namespace TCPServer
             {
                 Server.OnServerExitCallback = OnServerExit;
                 Server.OnRequestRecievedCallback = OnRequestReceived;
-                Client = new CommunicationServerClient();
                 radioOnOff.Checked = true;
                 radioOnOff.Text = "ON";
             }
@@ -36,8 +34,11 @@ namespace TCPServer
 
         private void OnServerExit()
         {
-            //this.radioOnOff.Invoke(new Action(() => this.radioOnOff.Checked = false));
-            //this.radioOnOff.Invoke(new Action(() => this.radioOnOff.Text = "OFF"));
+            if (Server.ServerState)
+            {
+                this.radioOnOff.Invoke(new Action(() => this.radioOnOff.Checked = false));
+                this.radioOnOff.Invoke(new Action(() => this.radioOnOff.Text = "OFF"));
+            }
         }
 
         private bool OnRequestReceived(int ClientGUID, byte[] Request, out byte[] Reply)

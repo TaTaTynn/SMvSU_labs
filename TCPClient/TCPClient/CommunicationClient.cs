@@ -13,6 +13,9 @@ namespace TCPClient
 
     public class CommunicationClient
     {
+        public bool connSync;
+        public bool connAsync;
+
         private Socket SyncSocket;
         private Socket AsyncSocket;
         private string ServerName;
@@ -28,12 +31,16 @@ namespace TCPClient
         public CommunicationClient()
         {
             OnClientDisconnected = null;
+
+            connAsync = false;
+            connSync = false;
         }
 
-        public int Connect(string HostName, int Port)
+        public int Connect(string HostName, int Port, int AsPort)
         {
             ServerName = HostName;
             SyncPort = Port;
+            AsyncPort= AsPort;
             //Соединяем синхронный канал
             try
             {
@@ -117,7 +124,8 @@ namespace TCPClient
                 Trace.TraceError(ex.ToString());
                 return -1;
             }
-            this.ConnectAsync(HostName, 33333);
+            connSync = true;
+            this.ConnectAsync(HostName, AsPort);
             //Создаем мьютекс для синхронного канала
             SendSyncMutex = new Mutex();
             return ClientGUID;
@@ -210,11 +218,12 @@ namespace TCPClient
             //    return -1;
             //}
             //Запускаем поток, ожидающий от сервера время
-            if (AsyncSocketThread == null)
+            if (AsyncSocketThread == null || AsyncSocketThread.ThreadState == System.Threading.ThreadState.Stopped)
             {
                 AsyncSocketThread = new Thread(new ThreadStart(AsyncSocketThreadProc));
                 AsyncSocketThread.Start();
             }
+            connAsync = true;
             return 0;
         }
 
@@ -272,6 +281,8 @@ namespace TCPClient
                 AsyncTimeReceived();
             if (OnClientDisconnected != null)
                 OnClientDisconnected();
+            connSync = false;
+            connAsync= false;
         }
 
         private void OnClientExit()
