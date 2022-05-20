@@ -27,8 +27,8 @@ namespace TCPClient
                     labelGUID.Text = " " + ClientGUID.ToString();
                     labelGUID.ForeColor = Color.DarkGreen;
                     labelGUID.BackColor = Color.PaleGreen;
-                    checkSync.Checked = Client.connSync;
-                    checkAsync.Checked = Client.connAsync;
+                    checkSync.Checked = Client.IsConnectedSync;
+                    checkAsync.Checked = Client.IsConnectedAsync;
                 }
                 else
                 {
@@ -71,21 +71,21 @@ namespace TCPClient
         }
         private void ClientDisconnected()
         {
-            this.labelState.Invoke(new Action(() => this.labelState.Text = "Not connected"));
+            labelState.Invoke(new Action(() => labelState.Text = "Not connected"));
 
-            this.labelGUID.Invoke(new Action(() => this.labelGUID.Text = "-1"));
-            this.labelGUID.Invoke(new Action(() => this.labelGUID.ForeColor = System.Drawing.SystemColors.ControlDark));
-            this.labelGUID.Invoke(new Action(() => this.labelGUID.BackColor = System.Drawing.SystemColors.ControlLight));
+            labelGUID.Invoke(new Action(() => labelGUID.Text = "-1"));
+            labelGUID.Invoke(new Action(() => labelGUID.ForeColor = System.Drawing.SystemColors.ControlDark));
+            labelGUID.Invoke(new Action(() => labelGUID.BackColor = System.Drawing.SystemColors.ControlLight));
 
-            this.checkSync.Invoke(new Action(() => this.checkSync.Checked = Client.connSync));
-            this.checkAsync.Invoke(new Action(() => this.checkAsync.Checked = Client.connAsync));
+            checkSync.Invoke(new Action(() => checkSync.Checked = Client.IsConnectedSync));
+            checkAsync.Invoke(new Action(() => checkAsync.Checked = Client.IsConnectedAsync));
         }
         private void RefreshTime()
         {
-            this.labelTime.Invoke(new Action(() => this.labelTime.ForeColor=Color.Red));
-            this.labelTime.Invoke(new Action(() => this.labelTime.Text = Client.getTime()));
-            System.Threading.Thread.Sleep(100);
-            this.labelTime.Invoke(new Action(() => this.labelTime.ForeColor=Color.Black));
+            labelTime.Invoke(new Action(() => labelTime.ForeColor=Color.Red));
+            labelTime.Invoke(new Action(() => labelTime.Text = Client.getTime()));
+            Thread.Sleep(100);
+            labelTime.Invoke(new Action(() => labelTime.ForeColor=Color.Black));
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
