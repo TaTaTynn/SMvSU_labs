@@ -12,7 +12,7 @@ namespace TCPServer
 
         private void buttonStartServer_Click(object sender, EventArgs e)
         {
-            if (Server.StartServer(22222, 33333) == false)
+            if (Server.StartServer(22222, 33333, 10000) == false)
             {
                 MessageBox.Show(@"Не удалось стартовать сервер", @"Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -36,8 +36,8 @@ namespace TCPServer
         {
             if (Server.ServerState)
             {
-                this.radioOnOff.Invoke(new Action(() => this.radioOnOff.Checked = false));
-                this.radioOnOff.Invoke(new Action(() => this.radioOnOff.Text = "OFF"));
+                radioOnOff.Invoke(new Action(() => radioOnOff.Checked = false));
+                radioOnOff.Invoke(new Action(() => radioOnOff.Text = "OFF"));
             }
         }
 

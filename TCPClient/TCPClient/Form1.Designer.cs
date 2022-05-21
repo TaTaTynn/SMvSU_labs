@@ -87,7 +87,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.label1.Location = new System.Drawing.Point(30, 56);
+            this.label1.Location = new System.Drawing.Point(30, 62);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(61, 20);
             this.label1.TabIndex = 4;
@@ -97,7 +97,7 @@
             // labelTime
             // 
             this.labelTime.AutoSize = true;
-            this.labelTime.Location = new System.Drawing.Point(91, 56);
+            this.labelTime.Location = new System.Drawing.Point(91, 62);
             this.labelTime.Name = "labelTime";
             this.labelTime.Size = new System.Drawing.Size(21, 20);
             this.labelTime.TabIndex = 5;
@@ -107,7 +107,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.label2.Location = new System.Drawing.Point(30, 23);
+            this.label2.Location = new System.Drawing.Point(30, 13);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(86, 20);
             this.label2.TabIndex = 4;
@@ -119,7 +119,7 @@
             this.labelState.AutoSize = true;
             this.labelState.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.labelState.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
-            this.labelState.Location = new System.Drawing.Point(107, 23);
+            this.labelState.Location = new System.Drawing.Point(107, 13);
             this.labelState.Name = "labelState";
             this.labelState.Size = new System.Drawing.Size(107, 20);
             this.labelState.TabIndex = 4;
@@ -141,22 +141,22 @@
             // 
             this.checkSync.AutoSize = true;
             this.checkSync.Enabled = false;
-            this.checkSync.Location = new System.Drawing.Point(34, 0);
+            this.checkSync.Location = new System.Drawing.Point(57, 37);
             this.checkSync.Name = "checkSync";
-            this.checkSync.Size = new System.Drawing.Size(37, 24);
+            this.checkSync.Size = new System.Drawing.Size(59, 24);
             this.checkSync.TabIndex = 7;
-            this.checkSync.Text = "s";
+            this.checkSync.Text = "sync";
             this.checkSync.UseVisualStyleBackColor = true;
             // 
             // checkAsync
             // 
             this.checkAsync.AutoSize = true;
             this.checkAsync.Enabled = false;
-            this.checkAsync.Location = new System.Drawing.Point(77, 0);
+            this.checkAsync.Location = new System.Drawing.Point(123, 37);
             this.checkAsync.Name = "checkAsync";
-            this.checkAsync.Size = new System.Drawing.Size(39, 24);
+            this.checkAsync.Size = new System.Drawing.Size(67, 24);
             this.checkAsync.TabIndex = 8;
-            this.checkAsync.Text = "a";
+            this.checkAsync.Text = "async";
             this.checkAsync.UseVisualStyleBackColor = true;
             // 
             // Form1

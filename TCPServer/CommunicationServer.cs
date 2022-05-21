@@ -41,13 +41,11 @@ namespace TCPServer
             OnServerExitCallback = null;
             OnRequestRecievedCallback = null;
             OnClientDisconnectedCallback = null;
-            timerCount = new System.Timers.Timer(10000);
-            timerCount.Elapsed += SendTimeToClients;
             currentGUID = -1;
             _ServerState = false;
         }
 
-        public bool StartServer(int PortNo, int AsPortNo)
+        public bool StartServer(int PortNo, int AsPortNo, int TimerLimit)
         {
             ListenSocketPort = PortNo;
             AsyncSocketPort = AsPortNo;
@@ -67,6 +65,8 @@ namespace TCPServer
             IncomingConnectionThread.Start();
             IncomingAsyncConnectionThread = new Thread(new ThreadStart(IncomingAsyncConnectionThreadProc));
             IncomingAsyncConnectionThread.Start();
+            timerCount = new System.Timers.Timer(TimerLimit);
+            timerCount.Elapsed += SendTimeToClients;
             _ServerState = true;
             return true;
         }

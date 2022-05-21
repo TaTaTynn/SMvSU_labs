@@ -82,8 +82,8 @@ namespace TCPClient
         }
         private void RefreshTime()
         {
-            labelTime.Invoke(new Action(() => labelTime.ForeColor=Color.Red));
-            labelTime.Invoke(new Action(() => labelTime.Text = Client.getTime()));
+            labelTime.Invoke(new Action(() => labelTime.ForeColor = Color.Red));
+            labelTime.Invoke(new Action(() => labelTime.Text = Client.Time));
             Thread.Sleep(100);
             labelTime.Invoke(new Action(() => labelTime.ForeColor=Color.Black));
         }

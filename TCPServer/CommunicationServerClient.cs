@@ -86,18 +86,6 @@ namespace TCPServer
 
         private void SyncSocketThreadProc()
         {
-            //Отправляем адрес асинхронного сокета
-            //try
-            //{
-            //    int BytesSend = SyncSocket.Send(BitConverter.GetBytes(_asyncSocket));
-            //}
-            //catch (Exception ex)
-            //{
-            //    Trace.TraceError(@"Не получилось отправить адрес асинхронного сокета");
-            //    Trace.TraceError(ex.ToString());
-            //    OnClientExit();
-            //    return;
-            //}
             //Отправляем нотификацию, что сервер готов
             try
             {
