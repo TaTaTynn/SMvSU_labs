@@ -1,9 +1,8 @@
 namespace TCPServer
 {
-    public partial class Form1 : Form
+    public partial class Form1 : System.Windows.Forms.Form
     {
         private CommunicationServer Server;
-        private CommunicationServerClient Client;
 
         public Form1()
         {
@@ -13,7 +12,7 @@ namespace TCPServer
 
         private void buttonStartServer_Click(object sender, EventArgs e)
         {
-            if (Server.StartServer(22222) == false)
+            if (Server.StartServer(22222, 33333, 10000) == false)
             {
                 MessageBox.Show(@"Не удалось стартовать сервер", @"Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -21,18 +20,25 @@ namespace TCPServer
             {
                 Server.OnServerExitCallback = OnServerExit;
                 Server.OnRequestRecievedCallback = OnRequestReceived;
-                Client = new CommunicationServerClient();
+                radioOnOff.Checked = true;
+                radioOnOff.Text = "ON";
             }
         }
 
         private void buttonStopServer_Click(object sender, EventArgs e)
         {
             Server.StopServer();
+            radioOnOff.Checked = false;
+            radioOnOff.Text = "OFF";
         }
 
         private void OnServerExit()
         {
-            //MessageBox.Show(@"Сервер остановлен", @"Уведомление", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            if (Server.ServerState)
+            {
+                radioOnOff.Invoke(new Action(() => radioOnOff.Checked = false));
+                radioOnOff.Invoke(new Action(() => radioOnOff.Text = "OFF"));
+            }
         }
 
         private bool OnRequestReceived(int ClientGUID, byte[] Request, out byte[] Reply)
@@ -40,6 +46,11 @@ namespace TCPServer
             Reply = new byte[Request.Length];
             Array.Copy(Request, Reply, Request.Length);
             return true;
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Server.StopServer();
         }
     }
 }

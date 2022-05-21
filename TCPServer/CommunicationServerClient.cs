@@ -14,9 +14,7 @@ namespace TCPServer
         private Socket SyncSocket;
         private Socket AsyncSocket;
         private Thread SyncSocketThread;
-        private Thread AsyncSocketThread;
         private int _ClientGUID = 0;
-        private static System.Timers.Timer timerCount;
         public int ClientGuid
         {
             get { return _ClientGUID; }
@@ -39,19 +37,13 @@ namespace TCPServer
             {
                 SyncSocket.Close();
             }
-            if (SyncSocketThread != null)
-            {
-                SyncSocketThread.Interrupt();
-            }
             if (AsyncSocket != null)
             {
                 AsyncSocket.Close();
             }
-            if (AsyncSocketThread != null)
+            if (SyncSocketThread != null)
             {
-                timerCount.Elapsed -= SendTimeToClient;
-                timerCount.Stop();
-                AsyncSocketThread.Interrupt();
+                SyncSocketThread.Interrupt();
             }
         }
 
@@ -62,16 +54,17 @@ namespace TCPServer
             Disconnect();
         }
 
-        public int FinishConnect(Socket SyncClientSocket, Socket AsyncClientSocket, int ConnectionGUID)
+        public int FinishConnect(Socket ClientSocket, int ConnectionGUID)
         {
-            SyncSocket = SyncClientSocket;
-            AsyncSocket = AsyncClientSocket;
+            if (SyncSocket == null)
+                SyncSocket = ClientSocket;
+            else
+                AsyncSocket = ClientSocket;
             _ClientGUID = ConnectionGUID;
             //Отправляем идентификатор соединения
             try
             {
-                int BytesSendSync = SyncSocket.Send(BitConverter.GetBytes(_ClientGUID));
-                int BytesSendAsync = AsyncSocket.Send(BitConverter.GetBytes(_ClientGUID));
+                int BytesSend = ClientSocket.Send(BitConverter.GetBytes(_ClientGUID));
             }
             catch (Exception ex)
             {
@@ -83,52 +76,12 @@ namespace TCPServer
             if (_ClientGUID == -1)
                 return -1;
             //Создаем поток синхронного канала
-            SyncSocketThread = new Thread(new ThreadStart(SyncSocketThreadProc));
-            SyncSocketThread.Start();
-
-            //Создаем поток асинхронного канала
-            AsyncSocketThread = new Thread(new ThreadStart(AsyncSocketThreadProc));
-            AsyncSocketThread.Start();
-
+            if (SyncSocketThread == null)
+            {
+                SyncSocketThread = new Thread(new ThreadStart(SyncSocketThreadProc));
+                SyncSocketThread.Start();
+            }
             return 0;
-        }
-
-        private void AsyncSocketThreadProc() ///////////////////////////////////////////////
-        {
-            timerCount = new System.Timers.Timer(2000);
-            timerCount.Elapsed += SendTimeToClient;
-            while (true)
-            {
-                if (!timerCount.Enabled && timerCount!=null)
-                {
-                    timerCount.Enabled = true;
-                }
-            }
-        }
-
-        private void SendTimeToClient(Object source, ElapsedEventArgs e)
-        {
-            byte[] SendBuffer = new byte[8192];
-            byte[] Reply = null;
-            byte[] time = Encoding.UTF8.GetBytes(e.SignalTime.ToString());
-            //Array.Copy(time, Request, BytesReceived);
-            bool bReply = OnSyncRequestReceived(_ClientGUID, time, out Reply);
-            if ((bReply == true) && (Reply != null))
-            {
-                //Отправляем время клиенту
-                try
-                {
-                    int BytesSend = AsyncSocket.Send(Reply);
-                }
-                catch (Exception ex)
-                {
-                    Trace.TraceError(@"Не получилось отправить клиенту время");
-                    Trace.TraceError(ex.ToString());
-                    OnClientExit();
-                    return;
-                }
-                //MessageBox.Show(e.SignalTime.ToString(), @"Но клиенту не попало", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
         }
 
         private void SyncSocketThreadProc()
@@ -191,6 +144,23 @@ namespace TCPServer
                     }
                 }
             }
+        }
+
+        public bool SendAsync(byte[] Reply)
+        {
+            //Отправляем время клиенту
+            try
+            {
+                int BytesSend = AsyncSocket.Send(Reply);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(@"Не получилось отправить клиенту время");
+                Trace.TraceError(ex.ToString());
+                OnClientExit();
+                return false;
+            }
+            return true;
         }
     }
 }

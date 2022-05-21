@@ -17,10 +17,18 @@ namespace TCPClient
             try
             {
                 //Пытаемся соединиться с сервером на локальном компьютере, порт 22222
-                int ClientGUID = Client.Connect("localhost", 22222);
+                int ClientGUID = Client.Connect("localhost", 22222, 33333);
                 if (ClientGUID != -1)
                 {
                     Trace.TraceInformation(@"Соединение прошло успешно. ClientGuid = {0}", ClientGUID);
+                    Client.AsyncTimeReceived += RefreshTime;
+                    Client.OnClientDisconnected = ClientDisconnected;
+                    labelState.Text = "Connected";
+                    labelGUID.Text = " " + ClientGUID.ToString();
+                    labelGUID.ForeColor = Color.DarkGreen;
+                    labelGUID.BackColor = Color.PaleGreen;
+                    checkSync.Checked = Client.IsConnectedSync;
+                    checkAsync.Checked = Client.IsConnectedAsync;
                 }
                 else
                 {
@@ -60,6 +68,29 @@ namespace TCPClient
                     MessageBox.Show(@"Не удалось получить ответ от сервера!", @"Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
+        }
+        private void ClientDisconnected()
+        {
+            labelState.Invoke(new Action(() => labelState.Text = "Not connected"));
+
+            labelGUID.Invoke(new Action(() => labelGUID.Text = "-1"));
+            labelGUID.Invoke(new Action(() => labelGUID.ForeColor = System.Drawing.SystemColors.ControlDark));
+            labelGUID.Invoke(new Action(() => labelGUID.BackColor = System.Drawing.SystemColors.ControlLight));
+
+            checkSync.Invoke(new Action(() => checkSync.Checked = Client.IsConnectedSync));
+            checkAsync.Invoke(new Action(() => checkAsync.Checked = Client.IsConnectedAsync));
+        }
+        private void RefreshTime()
+        {
+            labelTime.Invoke(new Action(() => labelTime.ForeColor = Color.Red));
+            labelTime.Invoke(new Action(() => labelTime.Text = Client.Time));
+            Thread.Sleep(100);
+            labelTime.Invoke(new Action(() => labelTime.ForeColor=Color.Black));
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Client.Disconnect();
         }
     }
 }
