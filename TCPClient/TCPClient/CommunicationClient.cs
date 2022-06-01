@@ -30,7 +30,7 @@ namespace TCPClient
         private int SyncPort;
         private int AsyncPort;
         private Thread AsyncSocketThread;
-        private string sTime;
+        private string sAsyncMsg;
         private int ClientGUID;
         private Mutex SendSyncMutex;
         public ClientDisconnectedDelegate OnClientDisconnected;
@@ -222,16 +222,16 @@ namespace TCPClient
                 }
                 if ((BytesReceived > 0) && (AsyncTimeReceived != null))
                 {
-                    byte[] bTime = new byte[BytesReceived];
-                    Array.Copy(RecieveBuffer, bTime, BytesReceived);
-                    sTime = Encoding.UTF8.GetString(bTime);
+                    byte[] bAsyncMsg = new byte[BytesReceived];
+                    Array.Copy(RecieveBuffer, bAsyncMsg, BytesReceived);
+                    sAsyncMsg = Encoding.UTF8.GetString(bAsyncMsg);
                     AsyncTimeReceived();
                 }
             }
         }
-        public string Time
+        public string AsyncMsg
         {
-            get { return sTime; }
+            get { return sAsyncMsg; }
         }
 
         public void Disconnect()
@@ -244,7 +244,7 @@ namespace TCPClient
             {
                 AsyncSocket.Close();
             }
-            sTime = "--";
+            sAsyncMsg = "--";
             _connSync = false;
             _connAsync= false;
             if (AsyncTimeReceived != null)

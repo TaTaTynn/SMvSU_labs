@@ -3,10 +3,10 @@ using System.Text;
 
 namespace TCPClient
 {
-    public partial class Form1 : Form
+    public partial class ClientForm : Form
     {
         private CommunicationClient Client;
-        public Form1()
+        public ClientForm()
         {
             InitializeComponent();
             Client = new CommunicationClient();
@@ -69,6 +69,27 @@ namespace TCPClient
                 }
             }
         }
+        private void buttonSendMsg_Click(object sender, EventArgs e)
+        {
+            string text = "<" + textBoxGUID.Text + ">" + textBoxMsg.Text;
+            byte[] request = Encoding.UTF8.GetBytes(text);
+            byte[] reply = null;
+            if (Client != null)
+            {
+                //отправляем запрос, таймаут на ответ - 5 секунд
+                int nBytes = Client.SendSуnc(request, out reply, 5);
+                //если ответ получен
+                if ((nBytes > 0) && (reply != null))
+                {
+                    string strReply = Encoding.UTF8.GetString(reply);
+                    MessageBox.Show(strReply, @"Ответ от сервера", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show(@"Не удалось получить ответ от сервера!", @"Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
         private void ClientDisconnected()
         {
             labelState.Invoke(new Action(() => labelState.Text = "Not connected"));
@@ -82,15 +103,31 @@ namespace TCPClient
         }
         private void RefreshTime()
         {
-            labelTime.Invoke(new Action(() => labelTime.ForeColor = Color.Red));
-            labelTime.Invoke(new Action(() => labelTime.Text = Client.Time));
-            Thread.Sleep(100);
-            labelTime.Invoke(new Action(() => labelTime.ForeColor=Color.Black));
+            if (Client.AsyncMsg[0] != '<')
+            {
+                labelTime.Invoke(new Action(() => labelTime.ForeColor = Color.Red));
+                labelTime.Invoke(new Action(() => labelTime.Text = Client.AsyncMsg));
+                Thread.Sleep(100);
+                labelTime.Invoke(new Action(() => labelTime.ForeColor = Color.Black));
+            }
+            else
+            {
+                string[] GaM = Client.AsyncMsg.Split(new char[] { '<', '>' }, StringSplitOptions.RemoveEmptyEntries);
+                //MessageBox.Show(GaM[1], string.Join(" ","Сообщение от клиента", GaM[0]), MessageBoxButtons.OK, MessageBoxIcon.Information);
+                labelGUIDfrom.Invoke(new Action(() => labelGUIDfrom.Text = GaM[0]));
+                textBoxMessage.Invoke(new Action(() => textBoxMessage.Text = GaM[1]));
+            }
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             Client.Disconnect();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            textBoxMessage.Text = "";
+            labelGUIDfrom.Text = "--";
         }
     }
 }

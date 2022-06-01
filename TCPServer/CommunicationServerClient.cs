@@ -19,7 +19,7 @@ namespace TCPServer
         {
             get { return _ClientGUID; }
         }
-        public RequestReceivedDelegate OnSyncRequestReceived;
+        public RequestReceivedDelegate OnSyncRequestReceived, OnRequestSendMsg;
         public ClientDisconnectedDelegate OnClientDisconnected;
         public CommunicationServerClient()
         {
@@ -126,6 +126,15 @@ namespace TCPServer
                     byte[] Reply = null;
                     byte[] Request = new byte[BytesReceived];
                     Array.Copy(RecieveBuffer, Request, BytesReceived);
+
+                    string Msg = Encoding.UTF8.GetString(Request);
+                    if (Msg[0] == '<')
+                    {
+                        string[] GaM = Msg.Split(new char[] { '<', '>' }, StringSplitOptions.RemoveEmptyEntries);
+                        Request = Encoding.UTF8.GetBytes("<" + _ClientGUID.ToString() + ">" + GaM[1]);
+                        OnRequestSendMsg?.Invoke(int.Parse(GaM[0]), Request, out Request);
+                    }
+
                     bool bReply = OnSyncRequestReceived(_ClientGUID, Request, out Reply);
                     if ((bReply == true) && (Reply != null))
                     {
@@ -155,7 +164,7 @@ namespace TCPServer
             }
             catch (Exception ex)
             {
-                Trace.TraceError(@"Не получилось отправить клиенту время");
+                Trace.TraceError(@"Не получилось отправить клиенту данные по асинхронному каналу");
                 Trace.TraceError(ex.ToString());
                 OnClientExit();
                 return false;

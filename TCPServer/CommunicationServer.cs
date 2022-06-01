@@ -245,6 +245,7 @@ namespace TCPServer
             {
                 client.OnSyncRequestReceived = OnRequestRecieved;
                 client.OnClientDisconnected = OnClientDisconnected;
+                client.OnRequestSendMsg = SendMsg;
                 Trace.TraceInformation(@"Клиент приконнектился. ClientGIUD = {0}. Всего клиентов соединено {1}.",
                 currentGUID, ClientNum());
             }
@@ -269,8 +270,6 @@ namespace TCPServer
             int result = client.FinishConnect(ClientSocket, ClientGUID);
             if (result == 0)
             {
-                client.OnSyncRequestReceived = OnRequestRecieved;
-                client.OnClientDisconnected = OnClientDisconnected;
                 Trace.TraceInformation(@"Клиент приконнектился к асинхронному сокету. ClientGIUD = {0}. Всего клиентов соединено {1}.",
                 ClientGUID, ClientNum());
             }
@@ -313,6 +312,11 @@ namespace TCPServer
         }
         private void OnServerExit()
         {
+            for (int i = 0; i < CommunicationClients.Length; i++)
+            {
+                if (CommunicationClients[i] != null && CommunicationClients[i].ClientGuid!=-1)
+                    CommunicationClients[i].Disconnect();
+            }
             timerCount.Stop();
             timerCount.Close();
             _ServerState = false;
@@ -332,6 +336,25 @@ namespace TCPServer
                 }
             }
             return -1;
+        }
+
+        private bool SendMsg(int ClientGUID, byte[] Request, out byte[] Reply)
+        {
+            if (ClientGUID>=CommunicationClients.Length || CommunicationClients[ClientGUID].ClientGuid == -1)
+            {
+                Reply = Encoding.UTF8.GetBytes("Не существует клиента с таким идентификатором");
+                return false;
+            }
+            if (CommunicationClients[ClientGUID].SendAsync(Request))
+            { 
+                Reply = Encoding.UTF8.GetBytes("Сообщение отправлено");
+                return true;
+            }
+            else
+            {
+                Reply = Encoding.UTF8.GetBytes("Сообщение не отправлено");
+                return false;
+            }
         }
     }
 }

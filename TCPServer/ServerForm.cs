@@ -1,10 +1,12 @@
+using System.Text;
+
 namespace TCPServer
 {
-    public partial class Form1 : System.Windows.Forms.Form
+    public partial class ServerForm : System.Windows.Forms.Form
     {
         private CommunicationServer Server;
 
-        public Form1()
+        public ServerForm()
         {
             InitializeComponent();
             Server = new CommunicationServer();
@@ -43,9 +45,9 @@ namespace TCPServer
 
         private bool OnRequestReceived(int ClientGUID, byte[] Request, out byte[] Reply)
         {
-            Reply = new byte[Request.Length];
-            Array.Copy(Request, Reply, Request.Length);
-            return true;
+                Reply = new byte[Request.Length];
+                Array.Copy(Request, Reply, Request.Length);
+                return true;
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
